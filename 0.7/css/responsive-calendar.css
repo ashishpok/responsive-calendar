@@ -1,5 +1,6 @@
 .responsive-calendar .controls {
     text-align: center;
+    padding-top: 15px;
 }
 
 .responsive-calendar .controls a {
@@ -8,7 +9,14 @@
 
 .responsive-calendar .controls h4 {
     display: inline;
+    font-weight: bold;
+    font-size: 24px;
 }
+.responsive-calendar .controls h5 {
+    display: inline;
+    font-weight: bold;
+}
+
 
 .responsive-calendar .day-headers,
 .responsive-calendar .days {
@@ -120,6 +128,8 @@
     bottom: 2px;
     right: 2px;
     z-index: 1;
+    background-color: #428BCA;
+    border-color: #357EBD;
 }
 
 .responsive-calendar .day.not-current .badge {

@@ -25,6 +25,7 @@
             <a class="pull-left" data-go="prev"><div class="btn btn-primary">Prev</div></a>
             <h4><span data-head-month></span> <span data-head-year></span></h4>
             <a class="pull-right" data-go="next"><div class="btn btn-primary">Next</div></a>
+            <br/><h5><span data-head-utc-month></span></h5>
         </div><hr/>
         <div class="day-headers">
           <div class="day header">आइत</div>
@@ -48,13 +49,12 @@
     <script type="text/javascript">
       $(document).ready(function () {
         $(".responsive-calendar").responsiveCalendar({
-          //time: '2014-05',
-          nepali: true,
-          startFromSunday: true
-                     // "2014-04-30": {"number": 5, "url": "http://w3widgets.com/responsive-slider"},
-           // "2014-04-26": {"number": 1, "url": "http://w3widgets.com"},
-          //  "2014-05-03":{"number": 1},
-            //"2014-06-12": {"number" : 10}}
+            //time: '2014-05',
+            nepali: true,
+            startFromSunday: true,
+            getDataUrl: function(year) {
+                return ("/0.7/data/paatro-data-" + year + ".json");
+            }
         });
       });
     </script>

@@ -28,6 +28,8 @@
                 this.currentMonth = time.month;
                 this.currentDay = time.day;
             } else {
+                this.nepaliCalendarData = {};
+                /*
                 if (!this.nepali) {
                     this.nepaliCalendarData = {};
                 } else {
@@ -44,12 +46,14 @@
                             days: [31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30],
                             newYearUtc: new Date(2015, 3, 14)
                         }
+
                     };
                 }
+                */
                 this.currentYear = this.time.getFullYear();
                 this.currentMonth = this.time.getMonth();
                 this.currentDay = this.time.getDate();
-                console.log("nepali val - calendar init");
+                //console.log("nepali val - calendar init");
                 this.currentNepaliMonthValues = this.getNepaliMonthValues(this.time);
             }
             this.initialDraw();
@@ -161,7 +165,7 @@
                     this.currentYear = prevMonthDay.getFullYear();
                     this.currentMonth = prevMonthDay.getMonth();
                     this.currentDay = prevMonthDay.getDay();
-                    console.log("nepali val - next");
+                    //console.log("nepali val - next");
                     this.currentNepaliMonthValues = this.getNepaliMonthValues(prevMonthDay);
                 }
 
@@ -182,14 +186,14 @@
                     this.drawDays(this.currentYear, this.currentMonth);
                 } else {
                     //using 5 days after last day of current month; 5 is just a choice can be 1 as well
-                    console.log("Before nepali month vals: " + JSON.stringify(this.currentNepaliMonthValues));
+                    //console.log("Before nepali month vals: " + JSON.stringify(this.currentNepaliMonthValues));
                     var nextMonthDay = (moment(this.currentNepaliMonthValues.endDate).add('d', 15)).toDate();
                     this.currentYear = nextMonthDay.getFullYear();
                     this.currentMonth = nextMonthDay.getMonth();
                     this.currentDay = nextMonthDay.getDay();
-                    console.log("nepali val - next");
+                    //console.log("nepali val - next");
                     this.currentNepaliMonthValues = this.getNepaliMonthValues(nextMonthDay);
-                    console.log("After nepali month vals: " + JSON.stringify(this.currentNepaliMonthValues));
+                    //console.log("After nepali month vals: " + JSON.stringify(this.currentNepaliMonthValues));
                 }
 
                 this.drawDays(this.currentYear, this.currentMonth, this.currentDay);
@@ -219,12 +223,14 @@
                         day.append(badge);
                     }
                     if (dayEvents.header != null) {
-                        header = $("<span></span>").html(dayEvents.header).addClass("badge");
-                        $(header).addClass("badge-top-center");
-                        if (dayEvents.headerClass != null) {
-                            badge.addClass(dayEvents.headerClass);
+                        if ((dayEvents.header[0] != null) && (dayEvents.header[0][0] != null)) {
+                            header = $("<span></span>").html(dayEvents.header[0][0]).addClass("badge");
+                            $(header).addClass("badge-top-center");
+                            if (dayEvents.headerClass != null) {
+                                badge.addClass(dayEvents.headerClass);
+                            }
+                            day.append(header);
                         }
-                        day.append(header);
                     }
                     if (dayEvents.footer != null) {
                         footer = $("<span></span>").html(this.options.nepaliTeethiStr[dayEvents.footer]).addClass("badge");
@@ -261,11 +267,39 @@
                 return new Date(year, month + 1, 0).getDate();
             },
             getNepaliMonthValues: function(date) {
-                var month = 0, advCounter = 0, prevCounter = 0, newYearDt, dateMoment = moment(date), nepaliMonthValues = {}, nepaliMonthsDays, diff;
+                var year, month = 0, advCounter = 0, prevCounter = 0, newYearDt, dateMoment = moment(date), nepaliMonthValues = {}, nepaliMonthsDays, diff;
 
                 // Get UTC year and add 57 to it to calculate nepali year based on first day of year for this date
-                nepaliMonthValues.year = date.getFullYear() + 57;
+                year = date.getFullYear() + 57;
                 //console.log("Nepali year: " + date + ";" + nepaliMonthValues.year);
+                //load data for current year, previous year and next year if not present in data
+                for (var idx = (year-1); idx <= (year+1); idx++) {
+                    if (this.nepaliCalendarData[idx] == undefined) {
+                        //load state selection options
+                        $.ajax({
+                            url: this.options.getDataUrl(idx),
+                            dataType: "json",
+                            context: this,
+                            async : false
+                        }).done(function(data) {
+                            if ((data != null) && (data[idx] != null)) {
+                                try {
+                                    this.nepaliCalendarData[idx] = data[idx];
+                                    this.nepaliCalendarData[idx].newYearUtc = (moment(data[idx].newYearUtcJson, 'YYYY-MM-DD')).toDate();
+                                    //console.log("New year date for " + idx + " is " + this.nepaliCalendarData[idx].newYearUtc);
+                                } catch (ex) {
+                                    console.log("Exception setting data for year " + idx + " : " + ex);
+                                }
+                            } else {
+                                console.log("No calendar data for year: " + idx);
+                            }
+                        }).fail(function(jqXhr, textStatus, error) {
+                            console.log("Error load data for year " + idx + " : " + error);
+                        });
+                    }
+                }
+
+                nepaliMonthValues.year = year;
                 newYearDt =  this.nepaliCalendarData[nepaliMonthValues.year].newYearUtc;
                 diff = dateMoment.diff(moment(newYearDt), 'd');
                 //console.log("Diff from new year: " + nepaliMonthValues.year + "; " + diff);
@@ -302,7 +336,7 @@
                 nepaliMonthValues.endDate.setHours(0,0,0,0);
                 nepaliMonthValues.nepaliDate = dateMoment.diff(moment(nepaliMonthValues.startDate), 'd') + 1;
 
-                console.log("Nepali date values for " + date + " : " + JSON.stringify(nepaliMonthValues));
+                //console.log("Nepali date values for " + date + " : " + JSON.stringify(nepaliMonthValues));
                 return nepaliMonthValues;
 
             },
@@ -319,7 +353,7 @@
             },
             drawDay: function (lastDayOfMonth, yearNum, monthNum, dayNum, i, localeDtVals) {
                 //console.log("drawDay: localeDtVals=" + JSON.stringify(localeDtVals) + ";dayNum=" + dayNum + "; i=" + i);
-                var calcDate, dateNow, dateString, day, dayDate, pastFutureClass, localeDate;
+                var calcDate, dateNow, dateString, day, dayDate, pastFutureClass, localeDate, footerData, headerData;
                 day = $("<div></div>").addClass("day");
                 dateNow = new Date();
                 dateNow.setHours(0, 0, 0, 0);
@@ -330,10 +364,32 @@
                     //calculate miti
                     if (dayDate.getTime() < localeDtVals.startDate.getTime()) {
                         localeDate = localeDtVals.prevMonthDays + dayNum - 1;
+                        // go to previous year for first month
+                        if (localeDtVals.month > 0) {
+                            footerData = this.nepaliCalendarData[localeDtVals.year].teethi[localeDtVals.month];
+                            headerData = this.nepaliCalendarData[localeDtVals.year].parva[localeDtVals.month + "-" + localeDate];
+                        } else {
+                            footerData = this.nepaliCalendarData[localeDtVals.year-1].teethi[12];
+                            headerData = this.nepaliCalendarData[localeDtVals.year].parva["12-" + localeDate];
+                        }
+                        //console.log("previous month data for year=" + localeDtVals.year + "; month=" + localeDtVals.month + "; footer=" + footer);
                     } else if (dayDate.getTime() > localeDtVals.endDate.getTime()) {
                         localeDate = (moment(dayDate).diff(moment(localeDtVals.endDate), 'd'));
+                        // go to next year for last month
+                        if (localeDtVals.month < 11) {
+                            footerData = this.nepaliCalendarData[localeDtVals.year].teethi[localeDtVals.month+ 2];
+                            headerData = this.nepaliCalendarData[localeDtVals.year].parva[(localeDtVals.month+2) + "-" + localeDate];
+                        } else {
+                            footerData = this.nepaliCalendarData[localeDtVals.year+1].teethi[1];
+                            headerData = this.nepaliCalendarData[localeDtVals.year].parva["1-" + localeDate];
+                        }
+                        //console.log("next month data for year=" + localeDtVals.year + "; month=" + localeDtVals.month + "; footer=" + footer);
                     } else {
                         localeDate = (moment(dayDate).diff(moment(localeDtVals.startDate), 'd')) + 1;
+                        //console.log("year data for year=" + localeDtVals.year + "; month=" + localeDtVals.month + " : "
+                        //    + JSON.stringify(this.nepaliCalendarData[localeDtVals.year].teethi[localeDtVals.month + 1]))
+                        footerData = this.nepaliCalendarData[localeDtVals.year].teethi[localeDtVals.month+ 1];
+                        headerData = this.nepaliCalendarData[localeDtVals.year].parva[(localeDtVals.month+1) + "-" + localeDate];
                     }
                     yearNum = dayDate.getFullYear();
                     monthNum = dayDate.getMonth();
@@ -341,11 +397,10 @@
 
                     dateString = yearNum + "-" + this.addLeadingZero(monthNum) + "-" + this.addLeadingZero(dayNum);
                     //localeDate = dayNum;
-                    // TODO - need to be loaded from AJAX (expose API and load data first)
                     this.options.events[dateString] = {};
                     this.options.events[dateString].utcDay = dayNum;
-                    this.options.events[dateString].footer = (dayNum % 15);
-                    this.options.events[dateString].header = 'राम नवमी';
+                    this.options.events[dateString].footer = footerData[localeDate-1];
+                    this.options.events[dateString].header = headerData;
                     //console.log("After converted date: " + dayDate + ";dayNum=" + dayNum + "; i=" + i + "; localeDate=" + localeDate);
                 } else {
                     dayDate = new Date(yearNum, monthNum - 1, dayNum);
@@ -398,8 +453,8 @@
                 time.setDate(1);
                 firstDayOfMonth = this.options.startFromSunday ? time.getDay() + 1 : time.getDay() || 7;
                 lastDayOfMonth = this.getDaysInMonth(year, month);
-                console.log("drawDays: currentMonth=" + currentMonth +"; monthNum=" + monthNum + "; yearNum=" + yearNum + "; time=" + time
-                            + "; firstDayOfMonth=" + firstDayOfMonth + "; lastDayOfMonth=" + lastDayOfMonth);
+                //console.log("drawDays: currentMonth=" + currentMonth +"; monthNum=" + monthNum + "; yearNum=" + yearNum + "; time=" + time
+                //            + "; firstDayOfMonth=" + firstDayOfMonth + "; lastDayOfMonth=" + lastDayOfMonth);
                 timeout = 0;
                 if (this.options.monthChangeAnimation) {
                     days = this.$element.find('[data-group="days"] .day');
@@ -416,13 +471,20 @@
                 if (this.options.allRows) {
                     loopBase = 42;
                 } else {
-                    console.log("shouldn't come here for nepali cal");
+                    //console.log("shouldn't come here for nepali cal");
                     multiplier = Math.ceil((firstDayOfMonth - (dayBase - 1) + lastDayOfMonth) / 7);
                     loopBase = multiplier * 7;
                 }
-                this.$element.find("[data-head-year]").html((this.nepali) ? this.convertToNepaliNumber(localeDtVals.year) : year);
-                this.$element.find("[data-head-month]").html((this.nepali) ? this.options.nepaliMonths[localeDtVals.month]
-                            : this.options.translateMonths[time.getMonth()]);
+                if(this.nepali) {
+                    this.$element.find("[data-head-year]").html(this.convertToNepaliNumber(localeDtVals.year));
+                    this.$element.find("[data-head-month]").html(this.options.nepaliMonths[localeDtVals.month]);
+                    this.$element.find("[data-head-utc-month]").html(this.options.translateMonths[localeDtVals.startDate.getMonth()] + " / "
+                                        + this.options.translateMonths[localeDtVals.endDate.getMonth()]);
+
+                } else {
+                    this.$element.find("[data-head-year]").html(year);
+                    this.$element.find("[data-head-month]").html(this.options.translateMonths[time.getMonth()]);
+                }
                 draw = function () {
                     var dayNum, setEvents, firstDayOfMonthNum;
                     thisRef.$element.find('[data-group="days"]').empty();
@@ -430,8 +492,8 @@
                     dayNum = dayBase - firstDayOfMonthNum;
                     i = thisRef.options.startFromSunday ? 0 : 1;
 
-                    console.log("drawDay call: dayNum=" + dayNum +"; firstDayOfMonthNum=" + firstDayOfMonthNum + "; i=" + i
-                                        + "; loopBase=" + loopBase +"; cond=" + (loopBase - firstDayOfMonthNum + dayBase));
+                    //("drawDay call: dayNum=" + dayNum +"; firstDayOfMonthNum=" + firstDayOfMonthNum + "; i=" + i
+                     //                   + "; loopBase=" + loopBase +"; cond=" + (loopBase - firstDayOfMonthNum + dayBase));
                     while (dayNum < loopBase - firstDayOfMonthNum + dayBase) {
                         thisRef.drawDay(lastDayOfMonth, yearNum, monthNum, dayNum, i, localeDtVals);
                         dayNum = dayNum + 1;
@@ -533,6 +595,7 @@
             startFromSunday: false,
             activateNonCurrentMonths: false,
             monthChangeAnimation: true,
+            getDataUrl: void 0,
             onInit: void 0,
             onDayClick: void 0,
             onDayHover: void 0,
