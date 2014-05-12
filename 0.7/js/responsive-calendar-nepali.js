@@ -199,14 +199,40 @@
                 return null;
             },
             addOthers: function (day, dayEvents) {
-                var badge;
+                var badge, header, footer;
+                //console.log("addOthers: " + JSON.stringify(dayEvents));
                 if (typeof dayEvents === "object") {
                     if (dayEvents.number != null) {
                         badge = $("<span></span>").html(dayEvents.number).addClass("badge");
+                        $(badge).addClass("badge-top");
                         if (dayEvents.badgeClass != null) {
                             badge.addClass(dayEvents.badgeClass);
                         }
                         day.append(badge);
+                    }
+                    if (dayEvents.utcDay != null) {
+                        badge = $("<span></span>").html(dayEvents.utcDay).addClass("badge");
+                        $(badge).addClass("badge-bottom");
+                        if (dayEvents.utcClass != null) {
+                            badge.addClass(dayEvents.utcClass);
+                        }
+                        day.append(badge);
+                    }
+                    if (dayEvents.header != null) {
+                        header = $("<span></span>").html(dayEvents.header).addClass("badge");
+                        $(header).addClass("badge-top-center");
+                        if (dayEvents.headerClass != null) {
+                            badge.addClass(dayEvents.headerClass);
+                        }
+                        day.append(header);
+                    }
+                    if (dayEvents.footer != null) {
+                        footer = $("<span></span>").html(this.options.nepaliTeethiStr[dayEvents.footer]).addClass("badge");
+                        $(footer).addClass("badge-bottom-center");
+                        if (dayEvents.footerClass != null) {
+                            badge.addClass(dayEvents.footerClass);
+                        }
+                        day.append(footer);
                     }
                     if (dayEvents.url) {
                         day.find("a").attr("href", dayEvents.url);
@@ -216,6 +242,7 @@
             },
             makeActive: function (day, dayEvents) {
                 var classes, eventClass, i, _i, _len;
+                //console.log("makeActive: " + JSON.stringify(dayEvents));
                 if (dayEvents) {
                     if (dayEvents["class"]) {
                         classes = dayEvents["class"].split(" ");
@@ -223,7 +250,7 @@
                             eventClass = classes[i];
                             day.addClass(eventClass);
                         }
-                    } else {
+                    } else if (!this.nepali) {
                         day.addClass("active");
                     }
                     day = this.addOthers(day, dayEvents);
@@ -279,22 +306,50 @@
                 return nepaliMonthValues;
 
             },
+            convertToNepaliNumber: function(num) {
+                if (isNaN(num)) {
+                    return "";
+                } else {
+                    var numStr = (num + "").trim(), numNep = "", i;
+                    for (i = 0; i < numStr.length; i++) {
+                        numNep += "" + this.options.nepaliNumbers[parseInt(numStr.charAt(i))];
+                    }
+                    return numNep;
+                }
+            },
             drawDay: function (lastDayOfMonth, yearNum, monthNum, dayNum, i, localeDtVals) {
                 //console.log("drawDay: localeDtVals=" + JSON.stringify(localeDtVals) + ";dayNum=" + dayNum + "; i=" + i);
-                var calcDate, dateNow, dateString, day, dayDate, pastFutureClass;
+                var calcDate, dateNow, dateString, day, dayDate, pastFutureClass, localeDate;
                 day = $("<div></div>").addClass("day");
                 dateNow = new Date();
                 dateNow.setHours(0, 0, 0, 0);
 
                 if (this.nepali) {
                     //console.log("Before converted dayNum=" + dayNum + "; i=" + i);
-                    dayDate = (moment(localeDtVals.startDate).add('d', dayNum-2)).toDate();
+                    dayDate = (moment(localeDtVals.startDate).add('d', dayNum - 2)).toDate();
+                    //calculate miti
+                    if (dayDate.getTime() < localeDtVals.startDate.getTime()) {
+                        localeDate = localeDtVals.prevMonthDays + dayNum - 1;
+                    } else if (dayDate.getTime() > localeDtVals.endDate.getTime()) {
+                        localeDate = (moment(dayDate).diff(moment(localeDtVals.endDate), 'd'));
+                    } else {
+                        localeDate = (moment(dayDate).diff(moment(localeDtVals.startDate), 'd')) + 1;
+                    }
                     yearNum = dayDate.getFullYear();
                     monthNum = dayDate.getMonth();
                     dayNum = dayDate.getDate();
-                    //console.log("After converted date: " + dayDate + ";dayNum=" + dayNum + "; i=" + i);
+
+                    dateString = yearNum + "-" + this.addLeadingZero(monthNum) + "-" + this.addLeadingZero(dayNum);
+                    //localeDate = dayNum;
+                    // TODO - need to be loaded from AJAX (expose API and load data first)
+                    this.options.events[dateString] = {};
+                    this.options.events[dateString].utcDay = dayNum;
+                    this.options.events[dateString].footer = (dayNum % 15);
+                    this.options.events[dateString].header = 'राम नवमी';
+                    //console.log("After converted date: " + dayDate + ";dayNum=" + dayNum + "; i=" + i + "; localeDate=" + localeDate);
                 } else {
                     dayDate = new Date(yearNum, monthNum - 1, dayNum);
+                    dateString = yearNum + "-" + this.addLeadingZero(monthNum) + "-" + this.addLeadingZero(dayNum);
                 }
                 dayDate.setHours(0, 0, 0, 0);
 
@@ -307,7 +362,6 @@
                 }
                 day.addClass(this.weekDays[i % 7]);
                 day.addClass(pastFutureClass);
-                dateString = yearNum + "-" + this.addLeadingZero(monthNum) + "-" + this.addLeadingZero(dayNum);
 
                 var isCurrent = (this.nepali) ? (dayDate.getTime() >= localeDtVals.startDate.getTime()) &&  (dayDate.getTime() <= localeDtVals.endDate.getTime())
                                                 : dayNum <= 0 || dayNum > lastDayOfMonth ;
@@ -321,7 +375,7 @@
                         dateString = yearNum + "-" + this.addLeadingZero(monthNum) + "-" + this.addLeadingZero(dayNum);
                     }
                 }
-                day.append($("<a>" + dayNum + "</a>").attr("data-day", dayNum).attr("data-month", monthNum).attr("data-year", yearNum));
+                day.append($("<a>" + (this.nepali ? this.convertToNepaliNumber(localeDate) : dayNum) + "</a>").attr("data-day", dayNum).attr("data-month", monthNum).attr("data-year", yearNum));
                 if (this.options.monthChangeAnimation) {
                     this.applyTransform(day, 'rotateY(180deg)');
                     this.applyBackfaceVisibility(day);
@@ -366,7 +420,7 @@
                     multiplier = Math.ceil((firstDayOfMonth - (dayBase - 1) + lastDayOfMonth) / 7);
                     loopBase = multiplier * 7;
                 }
-                this.$element.find("[data-head-year]").html((this.nepali) ? localeDtVals.year : year);
+                this.$element.find("[data-head-year]").html((this.nepali) ? this.convertToNepaliNumber(localeDtVals.year) : year);
                 this.$element.find("[data-head-month]").html((this.nepali) ? this.options.nepaliMonths[localeDtVals.month]
                             : this.options.translateMonths[time.getMonth()]);
                 draw = function () {
@@ -468,6 +522,11 @@
         $.fn.responsiveCalendar.defaults = {
             translateMonths: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
             nepaliMonths: ['बैशाख', 'जेष्ठ', 'आषाढ', 'श्रावण', 'भाद्र', 'आश्विन', 'कार्तिक', 'मंसिर', 'पौष', 'माघ', 'फाल्गुन', 'चैत्र'],
+            nepaliNumbers : ['०','१', '२', '३', '४', '५', '६', '७', '८', '९'],
+            nepaliTeethiStr : [
+                'औंसी', 'प्रतिपदा', 'द्वितीया', 'तृतिया', 'चतुर्थी', 'पञ्चमी', 'षष्ठी', 'सप्तमी',
+                'अष्टमी', 'नवमी', 'दशमी', 'एकादशी', 'द्वादशी', 'त्रयोदशी', 'चतुर्दशी', 'पूर्णिमा'
+            ],
             events: {},
             time: void 0,
             allRows: true,
