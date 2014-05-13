@@ -224,12 +224,23 @@
                     }
                     if (dayEvents.header != null) {
                         if ((dayEvents.header[0] != null) && (dayEvents.header[0][0] != null)) {
+                            //allowing hook to not show some headers in calendar
+                            if (dayEvents.header[2] == false) {
+                                return;
+                            }
                             header = $("<span></span>").html(dayEvents.header[0][0]).addClass("badge");
                             $(header).addClass("badge-top-center");
                             if (dayEvents.headerClass != null) {
                                 badge.addClass(dayEvents.headerClass);
                             }
                             day.append(header);
+                            // add holiday class if needed
+                            if (dayEvents.header[1] == true) {
+                                day.addClass("holiday");
+                                if (dayEvents.holidayClass != null) {
+                                    badge.addClass(dayEvents.holidayClass);
+                                }
+                            }
                         }
                     }
                     if (dayEvents.footer != null) {
@@ -479,7 +490,7 @@
                     this.$element.find("[data-head-year]").html(this.convertToNepaliNumber(localeDtVals.year));
                     this.$element.find("[data-head-month]").html(this.options.nepaliMonths[localeDtVals.month]);
                     this.$element.find("[data-head-utc-month]").html(this.options.translateMonths[localeDtVals.startDate.getMonth()] + " / "
-                                        + this.options.translateMonths[localeDtVals.endDate.getMonth()]);
+                                        + this.options.translateMonths[localeDtVals.endDate.getMonth()] + " " + year);
 
                 } else {
                     this.$element.find("[data-head-year]").html(year);
