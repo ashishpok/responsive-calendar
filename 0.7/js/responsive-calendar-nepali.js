@@ -29,32 +29,11 @@
                 this.currentDay = time.day;
             } else {
                 this.nepaliCalendarData = {};
-                /*
-                if (!this.nepali) {
-                    this.nepaliCalendarData = {};
-                } else {
-                    this.nepaliCalendarData = {
-                        2070: {
-                            days: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
-                            newYearUtc: new Date(2013, 3, 14)
-                        },
-                        2071: {
-                            days: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
-                            newYearUtc: new Date(2014, 3, 14)
-                        },
-                        2072: {
-                            days: [31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30],
-                            newYearUtc: new Date(2015, 3, 14)
-                        }
-
-                    };
-                }
-                */
                 this.currentYear = this.time.getFullYear();
-                this.currentMonth = this.time.getMonth();
+                this.currentMonth = this.time.getMonth() + 1;
                 this.currentDay = this.time.getDate();
-                //console.log("nepali val - calendar init");
                 this.currentNepaliMonthValues = this.getNepaliMonthValues(this.time);
+                this.preDraw();
             }
             this.initialDraw();
             return null;
@@ -225,20 +204,19 @@
                     if (dayEvents.header != null) {
                         if ((dayEvents.header[0] != null) && (dayEvents.header[0][0] != null)) {
                             //allowing hook to not show some headers in calendar
-                            if (dayEvents.header[2] == false) {
-                                return;
-                            }
-                            header = $("<span></span>").html(dayEvents.header[0][0]).addClass("badge");
-                            $(header).addClass("badge-top-center");
-                            if (dayEvents.headerClass != null) {
-                                badge.addClass(dayEvents.headerClass);
-                            }
-                            day.append(header);
-                            // add holiday class if needed
-                            if (dayEvents.header[1] == true) {
-                                day.addClass("holiday");
-                                if (dayEvents.holidayClass != null) {
-                                    badge.addClass(dayEvents.holidayClass);
+                            if (!(dayEvents.header[2] == false)) {
+                                header = $("<span></span>").html(dayEvents.header[0][0]).addClass("badge");
+                                $(header).addClass("badge-top-center");
+                                if (dayEvents.headerClass != null) {
+                                    badge.addClass(dayEvents.headerClass);
+                                }
+                                day.append(header);
+                                // add holiday class if needed
+                                if (dayEvents.header[1] == true) {
+                                    day.addClass("holiday");
+                                    if (dayEvents.holidayClass != null) {
+                                        badge.addClass(dayEvents.holidayClass);
+                                    }
                                 }
                             }
                         }
@@ -347,7 +325,7 @@
                 nepaliMonthValues.endDate.setHours(0,0,0,0);
                 nepaliMonthValues.nepaliDate = dateMoment.diff(moment(nepaliMonthValues.startDate), 'd') + 1;
 
-                //console.log("Nepali date values for " + date + " : " + JSON.stringify(nepaliMonthValues));
+                console.log("Nepali date values for " + date + " : " + JSON.stringify(nepaliMonthValues));
                 return nepaliMonthValues;
 
             },
@@ -360,6 +338,23 @@
                         numNep += "" + this.options.nepaliNumbers[parseInt(numStr.charAt(i))];
                     }
                     return numNep;
+                }
+            },
+            preDraw: function() {
+                // set today active=
+                //var todaySelector = '[data-day="' + this.currentDay + '"][data-month="' + this.currentMonth + '"][data-year="' + this.currentYear + '"]';
+                //console.log("finding: " + todaySelector);
+                //var today = this.$element.find(todaySelector);
+                //console.log("today:" + $(today).html());
+                //today.addClass("active");
+                //set month text
+                if (this.nepali) {
+                    var prevMonth = (this.currentNepaliMonthValues.month == 0) ? this.options.nepaliMonths[11] :
+                        this.options.nepaliMonths[this.currentNepaliMonthValues.month-1];
+                    var nextMonth = (this.currentNepaliMonthValues.month == 11) ? this.options.nepaliMonths[0] :
+                        this.options.nepaliMonths[this.currentNepaliMonthValues.month+1];
+                    this.$element.find("[data-go='prev']").children("div").html("<span class=\"glyphicon glyphicon-step-backward\"></span> " + prevMonth);
+                    this.$element.find("[data-go='next']").children("div").html(nextMonth + " <span class=\"glyphicon glyphicon-step-forward\"></span>");
                 }
             },
             drawDay: function (lastDayOfMonth, yearNum, monthNum, dayNum, i, localeDtVals) {
@@ -383,7 +378,7 @@
                             footerData = this.nepaliCalendarData[localeDtVals.year-1].teethi[12];
                             headerData = this.nepaliCalendarData[localeDtVals.year].parva["12-" + localeDate];
                         }
-                        //console.log("previous month data for year=" + localeDtVals.year + "; month=" + localeDtVals.month + "; footer=" + footer);
+                        console.log("previous month data for year=" + localeDtVals.year + "; month=" + localeDtVals.month);
                     } else if (dayDate.getTime() > localeDtVals.endDate.getTime()) {
                         localeDate = (moment(dayDate).diff(moment(localeDtVals.endDate), 'd'));
                         // go to next year for last month
@@ -394,7 +389,7 @@
                             footerData = this.nepaliCalendarData[localeDtVals.year+1].teethi[1];
                             headerData = this.nepaliCalendarData[localeDtVals.year].parva["1-" + localeDate];
                         }
-                        //console.log("next month data for year=" + localeDtVals.year + "; month=" + localeDtVals.month + "; footer=" + footer);
+                        console.log("next month data for year=" + localeDtVals.year + "; month=" + localeDtVals.month);
                     } else {
                         localeDate = (moment(dayDate).diff(moment(localeDtVals.startDate), 'd')) + 1;
                         //console.log("year data for year=" + localeDtVals.year + "; month=" + localeDtVals.month + " : "
@@ -441,12 +436,23 @@
                         dateString = yearNum + "-" + this.addLeadingZero(monthNum) + "-" + this.addLeadingZero(dayNum);
                     }
                 }
+                //console.log("Day Append: " + this.convertToNepaliNumber(localeDate));
                 day.append($("<a>" + (this.nepali ? this.convertToNepaliNumber(localeDate) : dayNum) + "</a>").attr("data-day", dayNum).attr("data-month", monthNum).attr("data-year", yearNum));
+
                 if (this.options.monthChangeAnimation) {
                     this.applyTransform(day, 'rotateY(180deg)');
                     this.applyBackfaceVisibility(day);
                 }
+                //if (localeDate == 7) {
+                //    console.log("Day HTML: " + $(day).html() + "; dateString=" + dateString);
+                //}
+
                 day = this.makeActive(day, this.options.events[dateString]);
+
+                //if (this.options.events[dateString]) {
+                //    console.log("Day HTML: " + $(day).html() + ";" + JSON.stringify(this.options.events[dateString]));
+                //}
+
                 return this.$element.find('[data-group="days"]').append(day);
             },
             drawDays: function (year, month, date) {
@@ -612,7 +618,11 @@
             onDayHover: void 0,
             onActiveDayClick: void 0,
             onActiveDayHover: void 0,
-            onMonthChange: void 0
+            onMonthChange: function(){
+                if(this.nepali) {
+                    this.preDraw();
+                }
+            }
         };
         spy = $('[data-spy="responsive-calendar"]');
         if (spy.length) {

@@ -16,8 +16,8 @@
 .responsive-calendar .controls h4 {
     display: inline;
     font-weight: bold;
-    font-size: 24px;
 }
+
 .responsive-calendar .controls h5 {
     display: inline;
     font-weight: bold;
@@ -47,15 +47,11 @@
 .responsive-calendar .day {
     display: inline-block;
     position: relative;
-    font-size: 30px;
+    font-size: 4vw;
     width: 14.285714285714286%;
     text-align: center;
     border-bottom: 1px #999 dotted;
     border-left: 1px #999 dotted;
-}
-
-.responsive-calendar .day.header {
-    font-size: 18px;
 }
 
 .responsive-calendar .day.sat {
@@ -108,11 +104,11 @@
 .responsive-calendar .day.not-current a {
     opacity: 0.6;
 }
-
+/*
 .responsive-calendar .day .badge {
-    font-size: 10px;
-    border-radius: 5px;
+   font-size: 1.4vw;
 }
+*/
 
 .responsive-calendar .day .badge-top {
     position: absolute;
@@ -124,8 +120,6 @@
 .responsive-calendar .day .badge-top-center {
     position: absolute;
     top: 2px;
-    left: 15px;
-    right: 15px;
     z-index: 1;
     background-color: #F2F2F2;
     color: #4D4D4D;
@@ -172,3 +166,68 @@
 .responsive-calendar .day.not-current .badge {
     opacity: 0.5;
 }
+
+/* screen size specific */
+@media (max-width: 767px) {
+    .responsive-calendar .controls h4 {
+        font-size: 18px;
+    }
+
+    .responsive-calendar .day.header {
+        font-size: 12px;
+    }
+
+    .responsive-calendar .day .badge {
+        font-size: 2.0vw;
+        border-radius: 3px;
+        padding: 1px 1px;
+    }
+
+    .responsive-calendar .day .badge-top-center {
+        left: 3px;
+        right: 3px;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 768px) {
+    .responsive-calendar .controls h4 {
+        font-size: 24px;
+    }
+
+    .responsive-calendar .day.header {
+        font-size: 18px;
+    }
+
+    .responsive-calendar .day .badge {
+        font-size: 1.4vw;
+        border-radius: 5px;
+    }
+
+    .responsive-calendar .day .badge-top-center {
+        left: 9px;
+        right: 9px;
+    }
+}
+
+@media (min-width: 992px) {
+    .responsive-calendar .controls h4 {
+        font-size: 24px;
+    }
+
+    .responsive-calendar .day.header {
+        font-size: 18px;
+    }
+
+    .responsive-calendar .day .badge {
+        font-size: 1.4vw;
+        border-radius: 5px;
+    }
+
+    .responsive-calendar .day .badge-top-center {
+        left: 15px;
+        right: 15px;
+    }
+}
+
